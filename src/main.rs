@@ -1,7 +1,7 @@
 #![allow(unused)]
 
 use serde::Deserialize;
-use std::fs;
+use std::io::{stdin, Read};
 
 #[derive(Debug, Deserialize)]
 pub struct File {
@@ -58,7 +58,8 @@ fn eval(term: Term) -> Val {
 }
 
 fn main() {
-    let program = fs::read_to_string("./examples/hello.json").unwrap();
+    let mut program = String::new();
+    stdin().lock().read_to_string(&mut program).unwrap();
     let program = serde_json::from_str::<File>(&program).unwrap();
 
     let term = program.expression;
