@@ -1,6 +1,7 @@
 #![allow(unused)]
 
 use serde::Deserialize;
+use std::fs;
 
 #[derive(Debug, Deserialize)]
 pub struct File {
@@ -24,7 +25,7 @@ pub struct Print {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(tag = "Kind")]
+#[serde(tag = "kind")]
 pub enum Term {
     Int(Int),
     Str(Str),
@@ -40,9 +41,26 @@ pub enum Val {
 }
 
 fn eval(term: Term) -> Val {
-    todo!()
+    match term {
+        Term::Int(number) => Val::Int(number.value),
+        Term::Str(str) => Val::Str(str.value),
+        Term::Print(print) => {
+            let val = eval(*print.value);
+            match val {
+                Val::Int(number) => print!("{}", number),
+                Val::Str(str) => print!("{}", str),
+                Val::Bool(bool) => print!("{}", bool),
+                _ => panic!("Valor não suportado"),
+            }
+            Val::Void
+        }
+    }
 }
 
 fn main() {
-    println!("Hello, world!");
+    let program = fs::read_to_string("./examples/hello.json").unwrap();
+    let program = serde_json::from_str::<File>(&program).unwrap();
+
+    let term = program.expression;
+    eval(term);
 }
