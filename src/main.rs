@@ -43,6 +43,7 @@ pub struct Binary {
 pub enum BinaryOp {
     Add,
     Sub,
+    Lt,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -139,6 +140,10 @@ fn eval(term: Term, scope: &mut Scope) -> Val {
                 },
                 BinaryOp::Sub => match (lhs, rhs) {
                     (Val::Int(lhs), Val::Int(rhs)) => Val::Int(lhs - rhs),
+                    _ => panic!("Operação inválida"),
+                },
+                BinaryOp::Lt => match (lhs, rhs) {
+                    (Val::Int(lhs), Val::Int(rhs)) => Val::Bool(lhs < rhs),
                     _ => panic!("Operação inválida"),
                 },
             }
