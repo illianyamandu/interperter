@@ -1,0 +1,7 @@
+print(
+    if (true) {
+        "deu bom"
+    } else {
+        "deu ruim"
+    }
+)

@@ -20,6 +20,11 @@ pub struct Str {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct Bool {
+    value: bool,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct Print {
     value: Box<Term>,
 }
@@ -38,12 +43,21 @@ pub enum BinaryOp {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct If {
+    condition: Box<Term>,
+    then: Box<Term>,
+    otherwise: Box<Term>,
+}
+
+#[derive(Debug, Deserialize)]
 #[serde(tag = "kind")]
 pub enum Term {
     Int(Int),
     Str(Str),
+    Bool(Bool),
     Print(Print),
     Binary(Binary),
+    If(If),
 }
 
 #[derive(Debug)]
@@ -58,6 +72,7 @@ fn eval(term: Term) -> Val {
     match term {
         Term::Int(number) => Val::Int(number.value),
         Term::Str(str) => Val::Str(str.value),
+        Term::Bool(bool) => Val::Bool(bool.value),
         Term::Print(print) => {
             let val = eval(*print.value);
             match val {
@@ -85,6 +100,11 @@ fn eval(term: Term) -> Val {
                 },
             }
         }
+        Term::If(i) => match eval(*i.condition) {
+            Val::Bool(true) => eval(*i.then),
+            Val::Bool(false) => eval(*i.otherwise),
+            _ => panic!("Condição inválida"),
+        },
     }
 }
 
