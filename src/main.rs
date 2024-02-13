@@ -12,64 +12,76 @@ pub struct File {
     expression: Term,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Int {
     value: i32,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Str {
     value: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Bool {
     value: bool,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Print {
     value: Box<Term>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Binary {
     rhs: Box<Term>,
     op: BinaryOp,
     lhs: Box<Term>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub enum BinaryOp {
     Add,
     Sub,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct If {
     condition: Box<Term>,
     then: Box<Term>,
     otherwise: Box<Term>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Parameter {
     text: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Let {
     name: Parameter,
     value: Box<Term>,
     next: Box<Term>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Var {
     text: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
+pub struct Function {
+    parameters: Vec<Parameter>,
+    value: Box<Term>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct Call {
+    callee: Box<Term>,
+    arguments: Vec<Term>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 #[serde(tag = "kind")]
 pub enum Term {
     Int(Int),
@@ -80,6 +92,8 @@ pub enum Term {
     If(If),
     Let(Let),
     Var(Var),
+    Function(Function),
+    Call(Call),
 }
 
 #[derive(Debug, Clone)]
@@ -88,6 +102,11 @@ pub enum Val {
     Int(i32),
     Bool(bool),
     Str(String),
+    Closure {
+        body: Term,
+        params: Vec<Parameter>,
+        env: Scope,
+    },
 }
 
 pub type Scope = HashMap<String, Val>;
@@ -139,6 +158,31 @@ fn eval(term: Term, scope: &mut Scope) -> Val {
             Some(val) => val.clone(),
             None => panic!("Variável não encontrada"),
         },
+        Term::Function(f) => Val::Closure {
+            body: *f.value,
+            params: f.parameters,
+            env: scope.clone(),
+        },
+        Term::Call(c) => {
+            let callee = eval(*c.callee, scope);
+            let mut args = Vec::new();
+            for arg in c.arguments {
+                args.push(eval(arg, scope));
+            }
+            match callee {
+                Val::Closure { body, params, env } => {
+                    if params.len() != args.len() {
+                        panic!("Número de argumentos inválido");
+                    }
+                    let mut new_scope = scope.clone();
+                    for (param, arg) in params.into_iter().zip(args) {
+                        new_scope.insert(param.text, arg);
+                    }
+                    eval(body, &mut new_scope)
+                }
+                _ => panic!("Chamada inválida"),
+            }
+        }
     }
 }
 
