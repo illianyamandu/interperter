@@ -74,6 +74,9 @@ fn eval(term: Term) -> Val {
             match binary.op {
                 BinaryOp::Add => match (lhs, rhs) {
                     (Val::Int(lhs), Val::Int(rhs)) => Val::Int(lhs + rhs),
+                    (Val::Str(lhs), Val::Int(rhs)) => Val::Str(format!("{lhs}{rhs}")),
+                    (Val::Int(lhs), Val::Str(rhs)) => Val::Str(format!("{lhs}{rhs}")),
+                    (Val::Str(lhs), Val::Str(rhs)) => Val::Str(format!("{lhs}{rhs}")),
                     _ => panic!("Operação inválida"),
                 },
                 BinaryOp::Sub => match (lhs, rhs) {
