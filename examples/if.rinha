@@ -1,7 +1,7 @@
 print(
-    if (true) {
+    if (false) {
         "deu bom"
     } else {
-        "deu ruim"
+        false
     }
 )
